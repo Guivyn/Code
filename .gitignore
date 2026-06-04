@@ -20,6 +20,7 @@ __pycache__/
 .code-workspace
 *.code-workspace
 node_modules/
+vs/
 
 # System files
 .DS_Store
