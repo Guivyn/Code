@@ -4,10 +4,11 @@
 
 这是一个 C/C++ 算法学习和竞赛编程练习项目,包含:
 
-- **Codeforces 题目**: `cf_*.cpp` (各种难度的题目)
-- **算法模板**: KMP.cpp, Range_sum.cpp 等经典算法实现
-- **课程作业**: `##Keshe.c` (1485行毕业生管理系统), `ch*.c` 系列
-- **基础练习**: 杨辉三角、斐波那契数列、排序算法等
+- **算法核心**: `algorithms/` 目录(KMP、DP、二分、Dijkstra 等经典模板)
+- **竞赛题解**: `competitive/` 目录(语义命名的 Codeforces 练习)
+- **课程作业**: `courses/cpp-oop/`(C++ 类/模板/STL)与 `courses/c-basics/`(C 基础)
+- **大型项目**: `projects/graduate-management/graduate_management.c`(毕业生管理系统)
+- **趣味作品**: `playground/`(p5.js 生成艺术)
 
 ---
 
@@ -78,10 +79,11 @@ int main(){
 ### 命名规范
 
 - **文件命名**:
-  - 英文题目: 蛇形 `cf_div2_a.cpp`, `Range_sum.cpp`
-  - 中文题目: 中文 `卡片游戏.cpp`, `安迪的第一个字典.cpp`
-  - 课程作业: `#开头` (`#2121212.c`, `#31321321.c`)
-  - 大型课设: `##开头` (`##Keshe.c` - 毕业生管理系统)
+  - 统一使用英文小写蛇形命名: `kmp.cpp`, `star_rail_time.cpp`
+  - 算法题按主题归档到 `algorithms/` 子目录
+  - 竞赛题放在 `competitive/`,按内容语义命名
+  - 课程作业用 `workNN_内容.cpp` 两位编号(如 `work01_circle.cpp`)
+  - 大型项目放 `projects/<项目名>/` 目录
 - **变量/函数**: 小写蛇形 `student_id`, `is_valid_date()`
 - **常量**: 大写 `MAX_STUDENTS = 1000010`
 
@@ -89,7 +91,7 @@ int main(){
 
 - **C++ I/O**: `cin`/`cout` (竞赛快速)
 - **C I/O**: `scanf`/`printf` (格式化可靠)
-- **数组索引**: 竞赛算法常用 **1-based** (如 KMP.cpp)
+- **数组索引**: 竞赛算法常用 **1-based** (如 `algorithms/strings/kmp.cpp`)
 - **STL 容器**: `vector`, `queue`, `stack`, `set`, `map`
 - **大数组**: `const int N = 1000010;` 声明
 
@@ -99,27 +101,26 @@ int main(){
 
 ### 核心算法实现
 
-- **KMP.cpp**: 字符串匹配,详细中文注释,1-based 索引
-- **Yang_hui.cpp**: 杨辉三角,二维动态数组示例
-- **铁轨.cpp**: 栈的实际应用
+- `algorithms/strings/kmp.cpp`: 字符串匹配,详细中文注释,1-based 索引
+- `algorithms/dp/yanghui_triangle.cpp`: 杨辉三角,二维动态数组示例
+- `algorithms/data-structures/rails_stack.cpp`: 栈的实际应用(铁轨,UVa 514)
 
 ### 大型项目
 
-- **##Keshe.c** (1485行): 毕业生信息管理系统
+- `projects/graduate-management/graduate_management.c`: 毕业生信息管理系统
   - 模块: `Import`, `Scan`, `Query`, `Add`, `Delete`, `Edit`
   - 数据结构: `struct GraduateInfo`, `struct Date`
   - 验证函数: `isValidGender()`, `isValidDate()`, `isValidStudentId()`
 
 ### 竞赛题目
 
-- `cf_div*.cpp`: Codeforces Division 2/3/4
-- `cf_ed_div2_*.cpp`: Educational Codeforces Round
+- `competitive/` 目录: 语义命名,如 `circle_game.cpp`, `parity_optimization.cpp`
 
 ---
 
 ## ? 编码和编译故障排除
 
-### 中文文件名或输出乱码
+### 中文输出乱码
 
 **症状**: 代码中文显示为 "瀛﹀彿" 等乱码
 **原因**: UTF-8 字节被误解为 GBK (Windows CP936)
@@ -183,16 +184,16 @@ g++ -g file.cpp -o file.exe
 
 ### 约定与命名
 
-- Codeforces 题：以 `cf_` 或 `cf_div*`、`cf_ed_` 等前缀命名（示例见项目文件）。
-- 中文题目：直接使用中文文件名（项目以 UTF-8 保存）。
-- 课程作业/大型项目：使用 `#` 或 `##` 前缀（例如 [Code/##Keshe.c](Code/##Keshe.c)）。
-- 练习与模板：`work*.cpp` 系列、`KMP.cpp`、`Range_sum.cpp` 等。
+- 统一英文 snake_case 文件名，按主题归档：`algorithms/`、`competitive/`、`courses/`、`projects/`、`playground/`。
+- 竞赛题按内容语义命名（如 `competitive/star_rail_time.cpp`），不再使用 `cf_` 前缀。
+- 课程作业：`courses/cpp-oop/workNN_内容.cpp` 两位编号。
+- 大型项目：`projects/<项目名>/` 目录。
 
 ### 关键文件（快速导航）
 
-- [Code/##Keshe.c](Code/##Keshe.c) — 毕业生管理系统（大型，含输入验证、数据模块）。
-- [Code/KMP.cpp](Code/KMP.cpp) — 字符串匹配模板（1-based 索引）。
-- [Code/Range_sum.cpp](Code/Range_sum.cpp), [Code/Yang_hui.cpp](Code/Yang_hui.cpp) — 其它常用模板。
+- [Code/projects/graduate-management/graduate_management.c](Code/projects/graduate-management/graduate_management.c) — 毕业生管理系统（大型，含输入验证、数据模块）。
+- [Code/algorithms/strings/kmp.cpp](Code/algorithms/strings/kmp.cpp) — 字符串匹配模板（1-based 索引）。
+- [Code/algorithms/math/prefix_sum.cpp](Code/algorithms/math/prefix_sum.cpp), [Code/algorithms/dp/yanghui_triangle.cpp](Code/algorithms/dp/yanghui_triangle.cpp) — 其它常用模板。
 
 ### 环境/陷阱
 
@@ -204,7 +205,7 @@ g++ -g file.cpp -o file.exe
 
 1. 一个技能/脚本：自动运行默认构建并收集编译器错误（便于自动修复建议）。
 2. 一个快速测试脚本：为常见题目运行样例输入并比较输出。
-3. 一个“编码约定”检查器：提醒 1-based/0-based 索引使用差异、中文文件名处理。
+3. 一个“编码约定”检查器：提醒 1-based/0-based 索引使用差异、Windows 中文输出编码处理。
 
 ——
-如果需要，我可以把这些内容进一步拆成独立技能（如“编译/运行”或“编码约定”），或把 `Code/AGENTS.md` 的单独文件保留为辅助导航。
+如果需要，可以把这些内容进一步拆成独立技能（如“编译/运行”或“编码约定”），或把本说明拆成独立的 `AGENTS.md` 保留为辅助导航。
