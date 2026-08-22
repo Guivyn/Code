@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cookie Monster — Eye Following Card</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #0062AD;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .card {
+      background: #FBF0DC;
+      max-width: 458px;
+      width: 100%;
+    }
+    .card-inner {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 18px;
+    }
+    .monster {
+      background: #0062AD;
+      width: 100%;
+      height: 432px;
+      overflow: clip;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .monster-inner {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      align-items: center;
+      justify-content: center;
+      padding: 117px 22px;
+    }
+    .eyes {
+      display: flex;
+      flex-direction: row;
+      gap: 4px;
+      align-items: center;
+      justify-content: center;
+    }
+    .eye-wrapper {
+      width: 204px;
+      height: 204px;
+      border-radius: 50%;
+      background: #FBF0DC;
+      position: relative;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .pupil {
+      position: absolute;
+      width: 76px;
+      height: 76px;
+      border-radius: 50%;
+      background: #000;
+      top: 50%;
+      left: 50%;
+      will-change: transform;
+    }
+    .legend {
+      width: 100%;
+      padding: 9px 0;
+    }
+    .legend-inner {
+      display: flex;
+      flex-direction: column;
+      gap: 55px;
+      align-items: flex-start;
+    }
+    .hero {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .hero .panton {
+      font-size: 64px;
+      font-weight: 700;
+      line-height: 68px;
+      color: #000;
+      white-space: nowrap;
+    }
+    .hero .subtitle {
+      font-size: 24px;
+      font-weight: 500;
+      color: #000;
+      white-space: nowrap;
+    }
+    .legend .location {
+      font-size: 16px;
+      font-weight: 500;
+      color: #000;
+      white-space: nowrap;
+    }
+    .footer-links {
+      margin-top: 24px;
+      text-align: center;
+      width: 100%;
+    }
+    .footer-links a {
+      color: #fff;
+      font-size: 10px;
+      text-decoration: underline;
+      opacity: 0.9;
+      transition: opacity 0.2s;
+    }
+    .footer-links a:hover { opacity: 1; }
+    .footer-links p {
+      color: #fff;
+      font-size: 10px;
+      margin-top: 4px;
+    }
+    .footer-links p a { font-size: 10px; }
+    @media (max-width: 480px) {
+      .eye-wrapper { width: 150px; height: 150px; }
+      .pupil { width: 56px; height: 56px; }
+      .monster { height: auto; min-height: 320px; }
+      .monster-inner { padding: 60px 22px; }
+      .hero .panton { font-size: 42px; line-height: 46px; }
+      .hero .subtitle { font-size: 18px; }
+      .legend .location { font-size: 14px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="card-inner">
+      <div class="monster">
+        <div class="monster-inner">
+          <div class="eyes">
+            <div class="eye-wrapper" data-eye="left"><div class="pupil" data-pupil="left"></div></div>
+            <div class="eye-wrapper" data-eye="right"><div class="pupil" data-pupil="right"></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="legend">
+        <div class="legend-inner">
+          <div class="hero">
+            <span class="panton">#0062AD</span>
+            <span class="subtitle">Cookie Monster</span>
+          </div>
+          <span class="location">Sesame Street</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="footer-links">
+    <p><a href="https://anotherplanet.io/" target="_blank" rel="noopener noreferrer">https://anotherplanet.io/</a></p>
+    <p>Thank you to <a href="https://www.instagram.com/faelpt" target="_blank" rel="noopener noreferrer">Rafael Serra</a> for the original design</p>
+  </div>
+  <script>
+    (function() {
+      var defaultOffsets = {
+        left:  { x: -27.1728, y: -23.6816 },
+        right: { x: 17.032,   y: 15.787  }
+      };
+      var leftPupil = document.querySelector('[data-pupil="left"]');
+      var rightPupil = document.querySelector('[data-pupil="right"]');
+      var leftEye = document.querySelector('[data-eye="left"]');
+      var rightEye = document.querySelector('[data-eye="right"]');
+      var PUPIL_RADIUS_RATIO = 38 / 204;
+
+      function scaleOffset(offset, eyeSize) {
+        return { x: (offset.x / 204) * eyeSize, y: (offset.y / 204) * eyeSize };
+      }
+
+      function updatePupil(pupilEl, eyeEl, offset, mx, my) {
+        var rect = eyeEl.getBoundingClientRect();
+        var cx = rect.left + rect.width / 2;
+        var cy = rect.top + rect.height / 2;
+        var dx = mx - cx, dy = my - cy;
+        var dist = Math.sqrt(dx * dx + dy * dy);
+        var pr = PUPIL_RADIUS_RATIO * rect.width;
+        var maxM = (rect.width / 2) - pr - (5 / 204 * rect.width);
+        var sd = scaleOffset(offset, rect.width);
+        if (dist < 1) {
+          pupilEl.style.transform = 'translate(-50%,-50%) translate(' + sd.x + 'px,' + sd.y + 'px)';
+          return;
+        }
+        var nx = dx / dist, ny = dy / dist;
+        var mx2 = Math.min(dist, maxM) * nx + sd.x;
+        var my2 = Math.min(dist, maxM) * ny + sd.y;
+        var td = Math.sqrt(Math.pow(mx2 - sd.x, 2) + Math.pow(my2 - sd.y, 2));
+        if (td > maxM) {
+          var s = maxM / td;
+          mx2 = sd.x + (mx2 - sd.x) * s;
+          my2 = sd.y + (my2 - sd.y) * s;
+        }
+        pupilEl.style.transform = 'translate(-50%,-50%) translate(' + mx2 + 'px,' + my2 + 'px)';
+      }
+
+      function initPupil(pupilEl, eyeEl, offset) {
+        var sd = scaleOffset(offset, eyeEl.getBoundingClientRect().width);
+        pupilEl.style.transform = 'translate(-50%,-50%) translate(' + sd.x + 'px,' + sd.y + 'px)';
+      }
+
+      initPupil(leftPupil, leftEye, defaultOffsets.left);
+      initPupil(rightPupil, rightEye, defaultOffsets.right);
+
+      var raf = null, lx = 0, ly = 0;
+      document.addEventListener('mousemove', function(e) {
+        lx = e.clientX; ly = e.clientY;
+        if (!raf) {
+          raf = requestAnimationFrame(function() {
+            updatePupil(leftPupil, leftEye, defaultOffsets.left, lx, ly);
+            updatePupil(rightPupil, rightEye, defaultOffsets.right, lx, ly);
+            raf = null;
+          });
+        }
+      });
+      document.addEventListener('touchmove', function(e) {
+        var t = e.touches[0];
+        if (!t) return;
+        lx = t.clientX; ly = t.clientY;
+        if (!raf) {
+          raf = requestAnimationFrame(function() {
+            updatePupil(leftPupil, leftEye, defaultOffsets.left, lx, ly);
+            updatePupil(rightPupil, rightEye, defaultOffsets.right, lx, ly);
+            raf = null;
+          });
+        }
+      }, { passive: true });
+    })();
+  </script>
+</body>
+</html>

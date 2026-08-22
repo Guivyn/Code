@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>ASCII Staircase Waterway</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        background: #0a0a0a;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        font-family: "Courier New", monospace;
+        color: #c8c8c8;
+      }
+
+      #app {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 14px;
+      }
+
+      #canvas-container canvas {
+        display: block;
+        border: 1px solid #1e1e1e;
+      }
+
+      #controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px 18px;
+        justify-content: center;
+        background: #111;
+        border: 1px solid #222;
+        padding: 12px 18px;
+        width: 720px;
+        max-width: 100%;
+      }
+
+      .ctrl {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 11px;
+        letter-spacing: 0.04em;
+        color: #888;
+      }
+
+      .ctrl label {
+        white-space: nowrap;
+        min-width: 90px;
+        color: #aaa;
+      }
+
+      .ctrl input[type="range"] {
+        -webkit-appearance: none;
+        width: 100px;
+        height: 2px;
+        background: #333;
+        outline: none;
+        cursor: pointer;
+      }
+      .ctrl input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #ccc;
+        cursor: pointer;
+      }
+
+      .ctrl span {
+        width: 34px;
+        text-align: right;
+        color: #ccc;
+        font-size: 11px;
+      }
+
+      .ctrl input[type="color"] {
+        -webkit-appearance: none;
+        width: 22px;
+        height: 22px;
+        border: none;
+        border-radius: 3px;
+        background: none;
+        cursor: pointer;
+        padding: 0;
+      }
+
+      .ctrl select {
+        background: #1a1a1a;
+        border: 1px solid #333;
+        color: #ccc;
+        font-family: "Courier New", monospace;
+        font-size: 11px;
+        padding: 2px 4px;
+        cursor: pointer;
+        outline: none;
+        max-width: 130px;
+      }
+
+      .sep {
+        width: 100%;
+        height: 1px;
+        background: #1d1d1d;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <div id="canvas-container"></div>
+
+      <div id="controls">
+        <!-- Row 1 -->
+        <div class="ctrl">
+          <label>Spawn / frame</label>
+          <input
+            type="range"
+            id="spawnRate"
+            min="1"
+            max="20"
+            value="5"
+            step="1"
+          />
+          <span id="spawnRateVal">5</span>
+        </div>
+        <div class="ctrl">
+          <label>Max particles</label>
+          <input
+            type="range"
+            id="maxParticles"
+            min="100"
+            max="3000"
+            value="2600"
+            step="50"
+          />
+          <span id="maxParticlesVal">2600</span>
+        </div>
+        <div class="ctrl">
+          <label>Font size</label>
+          <input
+            type="range"
+            id="fontSize"
+            min="6"
+            max="22"
+            value="16"
+            step="1"
+          />
+          <span id="fontSizeVal">16</span>
+        </div>
+
+        <div class="sep"></div>
+
+        <!-- Row 2 -->
+        <div class="ctrl">
+          <label>Noise threshold</label>
+          <input
+            type="range"
+            id="noiseThresh"
+            min="0.1"
+            max="0.9"
+            value="0.4"
+            step="0.01"
+          />
+          <span id="noiseThreshVal">0.40</span>
+        </div>
+        <div class="ctrl">
+          <label>Gravity accel</label>
+          <input
+            type="range"
+            id="gravAccel"
+            min="0.05"
+            max="2.0"
+            value="0.5"
+            step="0.05"
+          />
+          <span id="gravAccelVal">0.50</span>
+        </div>
+        <div class="ctrl">
+          <label>Slow descent</label>
+          <input
+            type="range"
+            id="slowDesc"
+            min="0.1"
+            max="3.0"
+            value="0.5"
+            step="0.05"
+          />
+          <span id="slowDescVal">0.50</span>
+        </div>
+
+        <div class="sep"></div>
+
+        <!-- Row 3 -->
+        <div class="ctrl">
+          <label>Fade alpha</label>
+          <input
+            type="range"
+            id="fadeAlpha"
+            min="2"
+            max="40"
+            value="9"
+            step="1"
+          />
+          <span id="fadeAlphaVal">9</span>
+        </div>
+        <div class="ctrl">
+          <label>Shrink rate</label>
+          <input
+            type="range"
+            id="shrinkRate"
+            min="0.990"
+            max="1.000"
+            value="0.997"
+            step="0.001"
+          />
+          <span id="shrinkRateVal">0.997</span>
+        </div>
+        <div class="ctrl">
+          <label>Glyph set</label>
+          <select id="glyphSet">
+            <option value="ascii">Printable ASCII</option>
+            <option value="symbols">Symbols ░▒▓█</option>
+            <option value="katakana">Katakana</option>
+            <option value="digits">0–9 binary</option>
+            <option value="braille">Braille</option>
+          </select>
+        </div>
+
+        <div class="sep"></div>
+
+        <!-- Row 4 -->
+        <div class="ctrl">
+          <label>Color</label>
+          <input type="color" id="glyphColor" value="#ffffff" />
+        </div>
+        <div class="ctrl">
+          <label>Blur</label>
+          <input type="range" id="useBlur" min="0" max="1" value="1" step="1" />
+          <span id="useBlurVal">on</span>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // ─── Glyph sets ───────────────────────────────────────────────────────────────
+      const GLYPH_SETS = {
+        ascii: Array.from({ length: 94 }, (_, i) =>
+          String.fromCharCode(33 + i),
+        ),
+        symbols: "░▒▓█▄▀■□●○◆◇★☆▲▼◀▶".split(""),
+        katakana: Array.from({ length: 96 }, (_, i) =>
+          String.fromCharCode(0x30a0 + i),
+        ),
+        digits: "01".split(""),
+        braille: Array.from({ length: 64 }, (_, i) =>
+          String.fromCharCode(0x2800 + i),
+        ),
+      };
+
+      // ─── UI helpers ───────────────────────────────────────────────────────────────
+      function bind(id, valId, fmt = (v) => v) {
+        const el = document.getElementById(id);
+        const disp = document.getElementById(valId);
+        disp.textContent = fmt(el.value);
+        el.addEventListener("input", () => {
+          disp.textContent = fmt(el.value);
+        });
+        return () => parseFloat(el.value);
+      }
+
+      const getSpawnRate = bind("spawnRate", "spawnRateVal", (v) => v);
+      const getMaxParticles = bind("maxParticles", "maxParticlesVal", (v) => v);
+      const getFontSize = bind("fontSize", "fontSizeVal", (v) => v);
+      const getNoiseThresh = bind("noiseThresh", "noiseThreshVal", (v) =>
+        parseFloat(v).toFixed(2),
+      );
+      const getGravAccel = bind("gravAccel", "gravAccelVal", (v) =>
+        parseFloat(v).toFixed(2),
+      );
+      const getSlowDesc = bind("slowDesc", "slowDescVal", (v) =>
+        parseFloat(v).toFixed(2),
+      );
+      const getFadeAlpha = bind("fadeAlpha", "fadeAlphaVal", (v) => v);
+      const getShrinkRate = bind("shrinkRate", "shrinkRateVal", (v) =>
+        parseFloat(v).toFixed(3),
+      );
+
+      // blur toggle
+      const blurEl = document.getElementById("useBlur");
+      const blurDisp = document.getElementById("useBlurVal");
+      blurDisp.textContent = blurEl.value === "1" ? "on" : "off";
+      blurEl.addEventListener("input", () => {
+        blurDisp.textContent = blurEl.value === "1" ? "on" : "off";
+      });
+      const getUseBlur = () => blurEl.value === "1";
+
+      // color
+      const colorEl = document.getElementById("glyphColor");
+      const getColor = () => colorEl.value;
+
+      // glyph set
+      const glyphEl = document.getElementById("glyphSet");
+      const getGlyphs = () => GLYPH_SETS[glyphEl.value] || GLYPH_SETS.ascii;
+
+      // ─── p5 sketch ────────────────────────────────────────────────────────────────
+      new p5(function (p) {
+        const W = 720;
+        let particles = [];
+        let time = 0;
+        let pg; // offscreen graphics for blur workaround
+
+        p.setup = function () {
+          let cnv = p.createCanvas(W, W);
+          cnv.parent("canvas-container");
+          p.textFont("Courier New");
+          p.textAlign(p.CENTER, p.CENTER);
+          p.noStroke();
+          pg = p.createGraphics(W, W);
+          pg.textFont("Courier New");
+          pg.textAlign(p.CENTER, p.CENTER);
+          pg.noStroke();
+        };
+
+        p.draw = function () {
+          const spawnRate = Math.round(getSpawnRate());
+          const maxP = Math.round(getMaxParticles());
+          const fs = Math.round(getFontSize());
+          const noiseThresh = getNoiseThresh();
+          const gravAccel = getGravAccel();
+          const slowDesc = getSlowDesc();
+          const fadeAlpha = Math.round(getFadeAlpha());
+          const shrinkRate = getShrinkRate();
+          const useBlur = getUseBlur();
+          const glyphs = getGlyphs();
+          const col = getColor();
+
+          // — fade
+          p.background(0, fadeAlpha);
+          if (useBlur) p.filter(p.BLUR, 1);
+
+          // — spawn
+          for (let i = 0; i < spawnRate; i++) {
+            const idx = time % maxP;
+            particles[idx] = {
+              x: (time * 99) % W,
+              y: 0,
+              g: 0,
+              s: fs, // current visual size
+              s0: fs, // original size (for opacity calc)
+              ch: glyphs[Math.floor(Math.random() * glyphs.length)],
+            };
+            time++;
+          }
+
+          // — update & draw
+          const hex = col;
+          const r = parseInt(hex.slice(1, 3), 16);
+          const g = parseInt(hex.slice(3, 5), 16);
+          const b = parseInt(hex.slice(5, 7), 16);
+
+          for (let idx = 0; idx < particles.length; idx++) {
+            const pt = particles[idx];
+            if (!pt) continue;
+
+            // shrink
+            pt.s *= shrinkRate;
+            if (pt.s < 1.5) {
+              particles[idx] = null;
+              continue;
+            }
+
+            // noise
+            const N = p.noise(pt.x / W, pt.y / 9, time / W);
+
+            // horizontal
+            if (N <= noiseThresh) {
+              pt.x += N % 0.1 > 0.05 ? 1 : -1;
+              pt.g = 0;
+            }
+
+            // vertical
+            if (N > noiseThresh) {
+              pt.g += gravAccel;
+              pt.y += pt.g;
+            } else {
+              pt.y += slowDesc;
+            }
+
+            if (pt.y > W + 20) {
+              particles[idx] = null;
+              continue;
+            }
+
+            // opacity based on current size ratio
+            const alpha = Math.min(255, (pt.s / pt.s0) * 320);
+
+            p.fill(r, g, b, alpha);
+            p.textSize(pt.s);
+            p.text(pt.ch, pt.x, pt.y);
+          }
+
+          // compact array occasionally to avoid indefinite growth
+          if (time % 600 === 0) {
+            particles = particles.filter(Boolean);
+            if (particles.length > maxP * 1.5)
+              particles.splice(0, particles.length - maxP);
+          }
+        };
+      }, document.getElementById("canvas-container").parentNode);
+    </script>
+  </body>
+</html>

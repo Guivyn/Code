@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>动力学拓扑</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600&family=Noto+Serif+SC:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --anthropic-dark: #141413;
+            --anthropic-light: #faf9f5;
+            --anthropic-mid-gray: #b0aea5;
+            --anthropic-light-gray: #e8e6dc;
+            --anthropic-orange: #d97757;
+            --anthropic-blue: #6a9bcc;
+            --anthropic-green: #788c5d;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: linear-gradient(135deg, var(--anthropic-light) 0%, #f5f3ee 100%);
+            min-height: 100vh; color: var(--anthropic-dark);
+        }
+        .container { display: flex; min-height: 100vh; padding: 20px; gap: 20px; }
+        .sidebar {
+            width: 320px; flex-shrink: 0;
+            background: rgba(255,255,255,0.95); backdrop-filter: blur(10px);
+            padding: 24px; border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(20,20,19,0.1);
+            overflow-y: auto; overflow-x: hidden;
+        }
+        .sidebar h1 { font-family: 'Noto Serif SC', serif; font-size: 24px; font-weight: 500; margin-bottom: 8px; }
+        .sidebar .subtitle { color: var(--anthropic-mid-gray); font-size: 14px; margin-bottom: 32px; line-height: 1.4; }
+        .control-section { margin-bottom: 32px; }
+        .control-section h3 {
+            font-size: 16px; font-weight: 600; margin-bottom: 16px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .control-section h3::before { content: '•'; color: var(--anthropic-orange); font-weight: bold; }
+        .seed-input {
+            width: 100%; background: var(--anthropic-light); padding: 12px; border-radius: 8px;
+            font-family: 'Courier New', monospace; font-size: 14px; margin-bottom: 12px;
+            border: 1px solid var(--anthropic-light-gray); text-align: center;
+        }
+        .seed-input:focus { outline: none; border-color: var(--anthropic-orange); box-shadow: 0 0 0 2px rgba(217,119,87,0.1); background: white; }
+        .seed-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+        .regen-button { margin-bottom: 0; }
+        .control-group { margin-bottom: 20px; }
+        .control-group label { display: block; font-size: 14px; font-weight: 500; margin-bottom: 8px; }
+        .slider-container { display: flex; align-items: center; gap: 12px; }
+        .slider-container input[type="range"] {
+            flex: 1; height: 4px; background: var(--anthropic-light-gray);
+            border-radius: 2px; outline: none; -webkit-appearance: none;
+        }
+        .slider-container input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none; width: 16px; height: 16px;
+            background: var(--anthropic-orange); border-radius: 50%; cursor: pointer;
+        }
+        .slider-container input[type="range"]::-moz-range-thumb {
+            width: 16px; height: 16px; background: var(--anthropic-orange);
+            border-radius: 50%; border: none; cursor: pointer;
+        }
+        .value-display { font-family: 'Courier New', monospace; font-size: 12px; color: var(--anthropic-mid-gray); min-width: 60px; text-align: right; }
+        .button {
+            background: var(--anthropic-orange); color: white; border: none;
+            padding: 10px 16px; border-radius: 6px; font-size: 14px; font-weight: 500;
+            cursor: pointer; transition: all 0.2s ease; width: 100%;
+        }
+        .button:hover { background: #c86641; transform: translateY(-1px); }
+        .button:active { transform: translateY(0); }
+        .button.secondary { background: var(--anthropic-blue); }
+        .button.secondary:hover { background: #5a8bb8; }
+        .button.tertiary { background: var(--anthropic-green); }
+        .button.tertiary:hover { background: #6b7b52; }
+        .button-row { display: flex; gap: 8px; }
+        .button-row .button { flex: 1; }
+        .canvas-area { flex: 1; display: flex; align-items: center; justify-content: center; min-width: 0; }
+        #canvas-container {
+            width: 100%; max-width: 1000px; border-radius: 12px; overflow: hidden;
+            box-shadow: 0 20px 40px rgba(20,20,19,0.1); background: #1a1a2e;
+        }
+        #canvas-container canvas { display: block; width: 100% !important; height: auto !important; }
+        .loading { display: flex; align-items: center; justify-content: center; font-size: 18px; color: var(--anthropic-mid-gray); }
+        .hint { font-size: 12px; color: var(--anthropic-mid-gray); margin-top: 8px; line-height: 1.5; padding: 10px; background: var(--anthropic-light); border-radius: 6px; }
+        .hint kbd { background: var(--anthropic-light-gray); padding: 1px 5px; border-radius: 3px; font-family: 'Courier New', monospace; font-size: 11px; }
+        @media (max-width: 600px) {
+            .container { flex-direction: column; }
+            .sidebar { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <h1>动力学拓扑</h1>
+            <div class="subtitle">点击画布在向量场中生成实体，观察它们在不可见的力流中漂移，留下描绘隐藏力拓扑的发光轨迹。</div>
+
+            <div class="control-section">
+                <h3>种子</h3>
+                <input type="number" id="seed-input" class="seed-input" value="42" onchange="updateSeed()">
+                <div class="seed-controls">
+                    <button class="button secondary" onclick="previousSeed()">← 上一个</button>
+                    <button class="button secondary" onclick="nextSeed()">下一个 →</button>
+                </div>
+                <button class="button tertiary regen-button" onclick="randomSeedAndUpdate()">↻ 随机</button>
+            </div>
+
+            <div class="control-section">
+                <h3>参数</h3>
+
+                <div class="control-group">
+                    <label>场分辨率</label>
+                    <div class="slider-container">
+                        <input type="range" id="fieldRes" min="10" max="50" step="2" value="20" oninput="updateParam('fieldRes', this.value)">
+                        <span class="value-display" id="fieldRes-value">20</span>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label>噪声尺度</label>
+                    <div class="slider-container">
+                        <input type="range" id="noiseScale" min="0.001" max="0.01" step="0.001" value="0.003" oninput="updateParam('noiseScale', this.value)">
+                        <span class="value-display" id="noiseScale-value">0.003</span>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label>场强度</label>
+                    <div class="slider-container">
+                        <input type="range" id="fieldStrength" min="0.5" max="4" step="0.1" value="1.5" oninput="updateParam('fieldStrength', this.value)">
+                        <span class="value-display" id="fieldStrength-value">1.5</span>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label>阻尼</label>
+                    <div class="slider-container">
+                        <input type="range" id="drag" min="0.9" max="0.999" step="0.001" value="0.985" oninput="updateParam('drag', this.value)">
+                        <span class="value-display" id="drag-value">0.985</span>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label>实体半径</label>
+                    <div class="slider-container">
+                        <input type="range" id="bodyRadius" min="4" max="30" step="1" value="12" oninput="updateParam('bodyRadius', this.value)">
+                        <span class="value-display" id="bodyRadius-value">12</span>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label>轨迹长度</label>
+                    <div class="slider-container">
+                        <input type="range" id="trailLen" min="20" max="300" step="10" value="120" oninput="updateParam('trailLen', this.value)">
+                        <span class="value-display" id="trailLen-value">120</span>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label>箭头密度</label>
+                    <div class="slider-container">
+                        <input type="range" id="arrowDensity" min="0.1" max="1" step="0.05" value="1" oninput="updateParam('arrowDensity', this.value)">
+                        <span class="value-display" id="arrowDensity-value">1</span>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label>时间速度</label>
+                    <div class="slider-container">
+                        <input type="range" id="timeSpeed" min="0" max="0.01" step="0.0005" value="0.003" oninput="updateParam('timeSpeed', this.value)">
+                        <span class="value-display" id="timeSpeed-value">0.003</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="control-section">
+                <h3>操作</h3>
+                <div class="button-row">
+                    <button class="button" onclick="resetParameters()">重置</button>
+                    <button class="button secondary" onclick="clearBodies()">清除全部</button>
+                </div>
+                <div class="hint">
+                    <b>参数说明：</b><br>
+                    <b>场分辨率</b> — 力箭头网格间距，越小越密<br>
+                    <b>噪声尺度</b> — Perlin 噪声频率，越小流场越平滑<br>
+                    <b>场强度</b> — 施加给实体的力的大小<br>
+                    <b>阻尼</b> — 速度衰减系数，越大惯性越强<br>
+                    <b>实体半径</b> — 生成圆形的大小<br>
+                    <b>轨迹长度</b> — 每个实体保留的轨迹点数上限<br>
+                    <b>箭头密度</b> — 显示箭头的网格点比例（1=全部显示）<br>
+                    <b>时间速度</b> — 向量场随时间演化的速度<br><br>
+                    <b>快捷键：</b><br>
+                    <kbd>点击</kbd> 画布生成实体<br>
+                    <kbd>C</kbd> 清除所有实体<br>
+                    <kbd>S</kbd> 切换向量场箭头<br>
+                    <kbd>T</kbd> 切换轨迹显示
+                </div>
+            </div>
+        </div>
+
+        <div class="canvas-area">
+            <div id="canvas-container">
+                <div class="loading">正在初始化向量场...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let params = {
+            seed: 42,
+            fieldRes: 20,
+            noiseScale: 0.003,
+            fieldStrength: 1.5,
+            drag: 0.985,
+            bodyRadius: 12,
+            trailLen: 120,
+            arrowDensity: 1.0,
+            timeSpeed: 0.003
+        };
+        let defaultParams = JSON.parse(JSON.stringify(params));
+
+        let bodies = [];
+        let showArrows = true;
+        let showTrails = true;
+        let timeOffset = 0;
+        let gfx;
+        let arrowMap = [];
+
+        function seededRandom(seed) {
+            let x = Math.sin(seed) * 43758.5453123;
+            return x - Math.floor(x);
+        }
+
+        function buildArrowMap() {
+            arrowMap = [];
+            let res = params.fieldRes;
+            let cols = Math.ceil(1200 / res);
+            let rows = Math.ceil(1200 / res);
+            for (let i = 0; i < cols * rows; i++) {
+                arrowMap.push(seededRandom(params.seed * 7919 + i * 104729) < params.arrowDensity);
+            }
+        }
+
+        function setup() {
+            let canvas = createCanvas(1200, 1200);
+            canvas.parent('canvas-container');
+            gfx = createGraphics(1200, 1200);
+            gfx.background(26, 26, 46);
+            document.querySelector('.loading').style.display = 'none';
+            noiseSeed(params.seed);
+            buildArrowMap();
+        }
+
+        function getFieldAngle(x, y) {
+            let n1 = noise(x * params.noiseScale, y * params.noiseScale, timeOffset);
+            let n2 = noise(x * params.noiseScale + 500, y * params.noiseScale + 500, timeOffset);
+            return (n1 * 4 - 2 + n2 * 2 - 1) * PI;
+        }
+
+        function getFieldVector(x, y) {
+            let angle = getFieldAngle(x, y);
+            let mag = noise(x * params.noiseScale * 0.5 + 1000, y * params.noiseScale * 0.5 + 1000, timeOffset);
+            mag = 0.5 + mag * 0.5;
+            return {
+                x: cos(angle) * mag * params.fieldStrength,
+                y: sin(angle) * mag * params.fieldStrength
+            };
+        }
+
+        function velToColor(vel) {
+            let speed = sqrt(vel.x * vel.x + vel.y * vel.y);
+            let t = constrain(speed / (params.fieldStrength * 2), 0, 1);
+            let r, g, b;
+            if (t < 0.25) {
+                let u = t / 0.25;
+                r = lerp(30, 40, u); g = lerp(60, 140, u); b = lerp(180, 200, u);
+            } else if (t < 0.5) {
+                let u = (t - 0.25) / 0.25;
+                r = lerp(40, 80, u); g = lerp(140, 200, u); b = lerp(200, 100, u);
+            } else if (t < 0.75) {
+                let u = (t - 0.5) / 0.25;
+                r = lerp(80, 230, u); g = lerp(200, 180, u); b = lerp(100, 40, u);
+            } else {
+                let u = (t - 0.75) / 0.25;
+                r = lerp(230, 255, u); g = lerp(180, 100, u); b = lerp(40, 30, u);
+            }
+            return [r, g, b];
+        }
+
+        function draw() {
+            timeOffset += params.timeSpeed;
+
+            gfx.noStroke();
+            gfx.fill(26, 26, 46, 18);
+            gfx.rect(0, 0, gfx.width, gfx.height);
+
+            for (let b of bodies) {
+                let fv = getFieldVector(b.x, b.y);
+                b.vx += fv.x * 0.3;
+                b.vy += fv.y * 0.3;
+                b.vx *= params.drag;
+                b.vy *= params.drag;
+                b.x += b.vx;
+                b.y += b.vy;
+
+                let wrapped = false;
+                if (b.x < 0 || b.x > gfx.width || b.y < 0 || b.y > gfx.height) {
+                    wrapped = true;
+                }
+                b.x = ((b.x % gfx.width) + gfx.width) % gfx.width;
+                b.y = ((b.y % gfx.height) + gfx.height) % gfx.height;
+
+                let c = velToColor({x: b.vx, y: b.vy});
+                b.trail.push({x: b.x, y: b.y, c: c, wrapped: wrapped});
+                if (b.trail.length > params.trailLen) b.trail.shift();
+
+                if (showTrails && b.trail.length > 1) {
+                    for (let i = 1; i < b.trail.length; i++) {
+                        let prev = b.trail[i - 1];
+                        let cur = b.trail[i];
+                        if (cur.wrapped || prev.wrapped) continue;
+                        let alpha = map(i, 0, b.trail.length, 5, 180);
+                        gfx.stroke(cur.c[0], cur.c[1], cur.c[2], alpha);
+                        gfx.strokeWeight(map(i, 0, b.trail.length, 0.5, 2.5));
+                        gfx.line(prev.x, prev.y, cur.x, cur.y);
+                    }
+                }
+
+                let sc = velToColor({x: b.vx, y: b.vy});
+                gfx.noStroke();
+                gfx.fill(sc[0], sc[1], sc[2], 60);
+                gfx.ellipse(b.x, b.y, params.bodyRadius * 2.5, params.bodyRadius * 2.5);
+                gfx.fill(sc[0], sc[1], sc[2], 200);
+                gfx.ellipse(b.x, b.y, params.bodyRadius, params.bodyRadius);
+            }
+
+            image(gfx, 0, 0);
+
+            if (showArrows) {
+                let res = params.fieldRes;
+                let idx = 0;
+                for (let x = res / 2; x < width; x += res) {
+                    for (let y = res / 2; y < height; y += res) {
+                        if (!arrowMap[idx]) { idx++; continue; }
+                        idx++;
+                        let fv = getFieldVector(x, y);
+                        let mag = sqrt(fv.x * fv.x + fv.y * fv.y);
+                        let angle = atan2(fv.y, fv.x);
+                        let len = map(mag, 0, params.fieldStrength * 1.5, 3, res * 0.4);
+                        let alpha = map(mag, 0, params.fieldStrength * 1.5, 30, 90);
+
+                        push();
+                        translate(x, y);
+                        rotate(angle);
+                        stroke(180, 180, 200, alpha);
+                        strokeWeight(1);
+                        line(-len / 2, 0, len / 2, 0);
+                        noStroke();
+                        fill(180, 180, 200, alpha);
+                        triangle(len / 2, 0, len / 2 - 4, -2.5, len / 2 - 4, 2.5);
+                        pop();
+                    }
+                }
+            }
+
+            for (let b of bodies) {
+                let c = velToColor({x: b.vx, y: b.vy});
+                noStroke();
+                fill(c[0], c[1], c[2], 50);
+                ellipse(b.x, b.y, params.bodyRadius * 2.5, params.bodyRadius * 2.5);
+                fill(c[0], c[1], c[2], 220);
+                ellipse(b.x, b.y, params.bodyRadius, params.bodyRadius);
+            }
+        }
+
+        function mousePressed() {
+            let canvasEl = document.getElementById('canvas-container');
+            let rect = canvasEl.getBoundingClientRect();
+            let scaleX = 1200 / rect.width;
+            let scaleY = 1200 / rect.height;
+            let mx = mouseX * scaleX;
+            let my = mouseY * scaleY;
+
+            if (mx >= 0 && mx <= 1200 && my >= 0 && my <= 1200) {
+                let fv = getFieldVector(mx, my);
+                bodies.push({
+                    x: mx, y: my,
+                    vx: fv.x * 2, vy: fv.y * 2,
+                    trail: [], born: frameCount
+                });
+            }
+        }
+
+        function keyPressed() {
+            if (key === 'c' || key === 'C') clearBodies();
+            if (key === 's' || key === 'S') showArrows = !showArrows;
+            if (key === 't' || key === 'T') {
+                showTrails = !showTrails;
+                if (!showTrails) for (let b of bodies) b.trail = [];
+            }
+        }
+
+        function clearBodies() {
+            bodies = [];
+            gfx.background(26, 26, 46);
+        }
+
+        function updateParam(name, value) {
+            params[name] = parseFloat(value);
+            document.getElementById(name + '-value').textContent = value;
+            if (name === 'noiseScale') noiseSeed(params.seed);
+            if (name === 'fieldRes' || name === 'arrowDensity') buildArrowMap();
+        }
+
+        function updateSeedDisplay() {
+            document.getElementById('seed-input').value = params.seed;
+        }
+
+        function updateSeed() {
+            let v = parseInt(document.getElementById('seed-input').value);
+            if (v && v > 0) {
+                params.seed = v; noiseSeed(v);
+                gfx.background(26,26,46); bodies = [];
+                buildArrowMap();
+            } else { updateSeedDisplay(); }
+        }
+
+        function previousSeed() {
+            params.seed = Math.max(1, params.seed - 1);
+            updateSeedDisplay(); noiseSeed(params.seed);
+            gfx.background(26,26,46); bodies = [];
+            buildArrowMap();
+        }
+
+        function nextSeed() {
+            params.seed++;
+            updateSeedDisplay(); noiseSeed(params.seed);
+            gfx.background(26,26,46); bodies = [];
+            buildArrowMap();
+        }
+
+        function randomSeedAndUpdate() {
+            params.seed = Math.floor(Math.random() * 999999) + 1;
+            updateSeedDisplay(); noiseSeed(params.seed);
+            gfx.background(26,26,46); bodies = [];
+            buildArrowMap();
+        }
+
+        function resetParameters() {
+            params = JSON.parse(JSON.stringify(defaultParams));
+            ['fieldRes','noiseScale','fieldStrength','drag','bodyRadius','trailLen','arrowDensity','timeSpeed'].forEach(k => {
+                document.getElementById(k).value = params[k];
+                document.getElementById(k + '-value').textContent = params[k];
+            });
+            updateSeedDisplay(); noiseSeed(params.seed);
+            gfx.background(26,26,46); bodies = [];
+            buildArrowMap();
+        }
+
+        window.addEventListener('load', function() { updateSeedDisplay(); });
+    </script>
+</body>
+</html>

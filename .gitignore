@@ -17,16 +17,15 @@ __pycache__/
 
 # IDE and Editor
 .vscode/
+.vs/
 .code-workspace
 *.code-workspace
 node_modules/
-vs/
 
 # System files
 .DS_Store
 Thumbs.db
 .git/metadata
 
-# Trae and Skills
+# Trae
 .trae/
-skills/
